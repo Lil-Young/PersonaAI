@@ -1,5 +1,6 @@
 package com.example.oauth.common.config;
 
+import com.example.oauth.common.auth.JwtTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,6 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -16,6 +18,12 @@ import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
+
+    private final JwtTokenFilter jwtTokenFilter;
+
+    public SecurityConfig(JwtTokenFilter jwtTokenFilter) {
+        this.jwtTokenFilter = jwtTokenFilter;
+    }
 
     @Bean
     public PasswordEncoder makePassword() {
@@ -33,7 +41,9 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 방식을 비활성화
                 // 특정 url 패턴에 대해서는 인증처리(Authentication 객체 생성) 제외
-                .authorizeHttpRequests(a->a.requestMatchers("/user/create", "user/login").permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(a->a.requestMatchers("/user/create", "/user/login").permitAll().anyRequest().authenticated())
+                // UsernamePasswordAuthenticationFilter 이 클래스에서 폼 로그인 인증을 처리, jwtTokenFilter가 없으면 UsernamePasswordAuthenticationFilter 이 클래스로 이동하는데, JSP를 사용하지 않으므로 폼 로그인 처리를 안하므로 UsernamePasswordAuthenticationFilter 이 클래스로 이동하지 않아도 된다.
+                .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
