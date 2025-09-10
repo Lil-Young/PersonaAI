@@ -19,7 +19,7 @@ spring:
     #   테이블 자동 생성
     generate-ddl: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
 
 jwt:
